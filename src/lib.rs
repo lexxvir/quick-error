@@ -1,3 +1,4 @@
+#![cfg_attr(not(feature="std"),no_std)]
 #![warn(missing_docs)]
 //! A macro which makes errors easy to write
 //!
@@ -301,7 +302,6 @@
 //!
 //!
 
-
 /// Main macro that does all the work
 #[macro_export]
 macro_rules! quick_error {
@@ -378,6 +378,7 @@ macro_rules! quick_error {
             }
         }
 
+        #[cfg(feature = "std")]
         impl ::std::error::Error for $strname {
             fn description(&self) -> &str {
                 self.0.description()
@@ -638,6 +639,13 @@ macro_rules! quick_error {
             $item:ident: $imode:tt [$(#[$imeta:meta])*] [$( $var:ident: $typ:ty ),*] {$( $funcs:tt )*}
         )*}
     ) => {
+        #[cfg(not(feature = "std"))]
+        pub(crate) mod std {
+            pub(crate) mod fmt {
+                pub(crate) use core::fmt::*;
+            }
+        }
+
         #[allow(unused)]
         #[allow(unknown_lints)]  // no unused_doc_comments in older rust
         #[allow(renamed_and_removed_lints)]
@@ -663,6 +671,7 @@ macro_rules! quick_error {
                 }
             }
         }
+        #[cfg(feature = "std")]
         #[allow(unused)]
         #[allow(unknown_lints)]  // no unused_doc_comments in older rust
         #[allow(renamed_and_removed_lints)]
@@ -735,7 +744,12 @@ macro_rules! quick_error {
         { }
     ) => {
         |self_: &$name, f: &mut ::std::fmt::Formatter| {
-            write!(f, "{}", ::std::error::Error::description(self_))
+            match () {
+                #[cfg(feature = "std")]
+                () => write!(f, "{}", ::std::error::Error::description(self_)),
+                #[cfg(not(feature = "std"))]
+                () => unimplemented!(),
+            }
         }
     };
     (FIND_DESCRIPTION_IMPL $item:ident: $imode:tt $me:ident $fmt:ident

@@ -11,3 +11,7 @@ homepage = "http://github.com/tailhook/quick-error"
 repository = "http://github.com/tailhook/quick-error"
 documentation = "http://docs.rs/quick-error"
 categories = ["rust-patterns"]
+
+[features]
+default = ["std"]
+std = []
