@@ -639,21 +639,20 @@ macro_rules! quick_error {
             $item:ident: $imode:tt [$(#[$imeta:meta])*] [$( $var:ident: $typ:ty ),*] {$( $funcs:tt )*}
         )*}
     ) => {
+        #[cfg(feature = "std")]
+        pub(crate) use ::std::fmt;
+
         #[cfg(not(feature = "std"))]
-        pub(crate) mod std {
-            pub(crate) mod fmt {
-                pub(crate) use core::fmt::*;
-            }
-        }
+        pub(crate) use ::core::fmt;
 
         #[allow(unused)]
         #[allow(unknown_lints)]  // no unused_doc_comments in older rust
         #[allow(renamed_and_removed_lints)]
         #[allow(unused_doc_comment)]
         #[allow(unused_doc_comments)]
-        impl ::std::fmt::Display for $name {
-            fn fmt(&self, fmt: &mut ::std::fmt::Formatter)
-                -> ::std::fmt::Result
+        impl fmt::Display for $name {
+            fn fmt(&self, fmt: &mut fmt::Formatter)
+                -> fmt::Result
             {
                 match *self {
                     $(
@@ -721,17 +720,17 @@ macro_rules! quick_error {
     (FIND_DISPLAY_IMPL $name:ident $item:ident: $imode:tt
         { display($self_:tt) -> ($( $exprs:tt )*) $( $tail:tt )*}
     ) => {
-        |quick_error!(IDENT $self_): &$name, f: &mut ::std::fmt::Formatter| { write!(f, $( $exprs )*) }
+        |quick_error!(IDENT $self_): &$name, f: &mut fmt::Formatter| { write!(f, $( $exprs )*) }
     };
     (FIND_DISPLAY_IMPL $name:ident $item:ident: $imode:tt
         { display($pattern:expr) $( $tail:tt )*}
     ) => {
-        |_, f: &mut ::std::fmt::Formatter| { write!(f, $pattern) }
+        |_, f: &mut fmt::Formatter| { write!(f, $pattern) }
     };
     (FIND_DISPLAY_IMPL $name:ident $item:ident: $imode:tt
         { display($pattern:expr, $( $exprs:tt )*) $( $tail:tt )*}
     ) => {
-        |_, f: &mut ::std::fmt::Formatter| { write!(f, $pattern, $( $exprs )*) }
+        |_, f: &mut fmt::Formatter| { write!(f, $pattern, $( $exprs )*) }
     };
     (FIND_DISPLAY_IMPL $name:ident $item:ident: $imode:tt
         { $t:tt $( $tail:tt )*}
@@ -743,7 +742,7 @@ macro_rules! quick_error {
     (FIND_DISPLAY_IMPL $name:ident $item:ident: $imode:tt
         { }
     ) => {
-        |self_: &$name, f: &mut ::std::fmt::Formatter| {
+        |self_: &$name, f: &mut fmt::Formatter| {
             match () {
                 #[cfg(feature = "std")]
                 () => write!(f, "{}", ::std::error::Error::description(self_)),
